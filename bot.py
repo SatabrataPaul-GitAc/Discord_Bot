@@ -1,7 +1,8 @@
-#Importing required libraries
 import discord
 import os
 import random
+import requests
+import json
 
 
 #prints the discord library version installed on system
@@ -18,18 +19,49 @@ client = discord.Client(intents=intents)
 my_secret = os.environ['TOKEN']
 
 #Programmable Customized Search Engine Credentials
-cse_id = os.environ['CSE_id']
-cse_key = os.environ['CSE_key']
+article_cse_id = os.environ['Article_cse_id']
+bookpdf_cse_id = os.environ['BookPdf_cse_id']
+cse_key = os.environ['cse_key']
+
+
+
+async def getArticleLink(topic,user):
+
+    result=[]
+
+    #The topic to be searched
+    query = " ".join(topic.split()[1:])
+
+    #Start page
+    page = 1
+
+    #Request Url
+    url = "https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&start={}".format(cse_key,article_cse_id,query,page)
+
+    #getting the data from the customized search engine
+    data = requests.get(url).json()
+
+    #getting the search result items
+    search_items = data.get("items")
+
+    for i,search_item in enumerate(search_items,start=1):
+        link = search_item.get("link")
+        result.append(link)
+    
+    await user.send("You can navigate to the following links: \n"+"\n\n".join(result))
+
+
 
 
 async def fullfillWish(wish,user):
     WISH = " ".join(wish.split()[1:])
     if(WISH=="1" or WISH.lower()=="article links"):
-        await user.send("Start Typing your topic on which you would like to get the article link...")
+        await user.send("Start Typing your topic to get the article link...")
         await user.send('Follow this syntax: \n$topic <topic to be searched>')
     elif(WISH=="2" or WISH.lower()=="pdf book links"):
         await user.send("Start typing your desired book name to get the download link....")
         await user.send('Follow this syntax: \n$book <book name>')
+
 
 
 @client.event
@@ -73,6 +105,10 @@ async def on_message(message):
     elif(message_content.startswith("$wish")):
         user = message.author
         await fullfillWish(message_content,user)
+    
+    elif(message_content.startswith("$topic")):
+        user = message.author
+        await getArticleLink(message_content,user)
         
         
   
