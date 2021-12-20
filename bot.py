@@ -1,8 +1,8 @@
+#importing required libraries
 import discord
 import os
 import random
 import requests
-import json
 
 
 #prints the discord library version installed on system
@@ -25,7 +25,7 @@ cse_key = os.environ['cse_key']
 
 
 
-async def getArticleLink(topic,user):
+async def getLink(topic,user):
 
     result=[]
 
@@ -36,7 +36,10 @@ async def getArticleLink(topic,user):
     page = 1
 
     #Request Url
-    url = "https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&start={}".format(cse_key,article_cse_id,query,page)
+    if(topic.split()[0]=="$topic"):
+        url = "https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&start={}".format(cse_key,article_cse_id,query,page)
+    elif(topic.split()[0]=="$book"):
+        url = "https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&start={}".format(cse_key,bookpdf_cse_id,query,page)
 
     #getting the data from the customized search engine
     data = requests.get(url).json()
@@ -106,9 +109,10 @@ async def on_message(message):
         user = message.author
         await fullfillWish(message_content,user)
     
-    elif(message_content.startswith("$topic")):
+    elif(message_content.startswith("$topic") or message_content.startswith("$book")):
         user = message.author
-        await getArticleLink(message_content,user)
+        await getLink(message_content,user)
+
         
         
   
